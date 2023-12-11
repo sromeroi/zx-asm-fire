@@ -21,13 +21,13 @@ FG_CYAN         EQU 5
 FG_YELLOW       EQU 6
 FG_WHITE        EQU 7
 BG_BLACK        EQU 0
-BG_BLUE         EQU (1<<3)
-BG_RED          EQU (2<<3)
-BG_MAGENTA      EQU (3<<3)
-BG_GREEN        EQU (4<<3)
-BG_CYAN         EQU (5<<3)
-BG_YELLOW       EQU (6<<3)
-BG_WHITE        EQU (7<<3)
+BG_BLUE         EQU (FG_BLUE << 3)
+BG_RED          EQU (FG_RED << 3)
+BG_MAGENTA      EQU (FG_MAGENTA << 3)
+BG_GREEN        EQU (FG_GREEN << 3)
+BG_CYAN         EQU (FG_CYAN << 3)
+BG_YELLOW       EQU (FG_YELLOW << 3)
+BG_WHITE        EQU (FG_WHITE << 3)
 COLOR_BRIGHT    EQU 64
 
 ; Fire never reaches top, so it's ok to reduce the "fire" array
