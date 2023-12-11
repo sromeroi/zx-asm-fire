@@ -10,5 +10,5 @@ You can see how the fire starts and runs for ~25 seconds with the sample GIF bel
 
 ![zx-asm-fire GIF](https://github.com/sromeroi/zx-asm-fire/blob/main/fire.gif?raw=true)
 
-Of course, it runs perfectly con the original computer, but also on FPGAs, emulators, etc.
+Of course, it runs perfectly on the original computer, but also on FPGAs, emulators, etc.
 
