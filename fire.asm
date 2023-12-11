@@ -165,7 +165,7 @@ animate_fire:
 ;-- Render Fire
 ;----------------------------------------------------------------------
 render_fire:
-    halt                     ; VSYNC => enable if you want to limit framerate
+    ;halt                    ; VSYNC => enable if you want to limit framerate
 
     ld hl, fire              ; HL = source (fire)
     ld de, $4000+6144        ; DE = destination (attributes memory block)
