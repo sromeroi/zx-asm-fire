@@ -1,5 +1,5 @@
 all:
-	../sjasmplus/sjasmplus fire.asm && fuse fire.tap
+	sjasmplus fire.asm && fuse fire.tap
 
 clean:
 	rm fire.tap
