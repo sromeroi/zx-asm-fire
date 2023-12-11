@@ -44,7 +44,7 @@ mainloop:
     call add_flames          ; add flames to fire bottom
     call animate_fire        ; animate the fire (calculate next frame)
     call render_fire         ; render fire "array" to screen (attributes)
-    jp mainloop
+    jr mainloop
 
 
 ;----------------------------------------------------------------------
@@ -171,15 +171,22 @@ render_fire:
     REPT 32*23               ; unroll loop for 768 times
     ld a, (hl)               ; Read "fire" value
     inc hl
-    ld ix, hl                ; backup hl
 
-    ld hl, palette           ; use HL+BC as palette[bc] to get color palette A
+    ld xh,d
+    ld xl,e                  ; backup de => (ld ix, de)
+
+    ld de, palette           ; use HL+BC as palette[bc] to get color palette A
     ld b, 0
     ld c, a
-    add hl, bc
-    ld a, (hl)               ; A = palette[ fire[n] ]
 
-    ld hl, ix
+    ex de, hl
+    add hl, bc
+    ex de,hl                 ; => add de, bc
+
+    ld a, (de)               ; A = palette[ fire[n] ]
+
+    ld d, xh
+    ld e,xl                  ; restore de (ld de, ix)
 
     ld (de), a               ; Write "pixel" (fire attribute) in the screen
     inc de
