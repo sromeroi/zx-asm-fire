@@ -111,9 +111,13 @@ add_flames:
     and 00001111b            ; Ensure bits 7-4 are 0
     add 2                    ; Increase the resulting value
     cp 16
-    jp m, .do_not_truncate_to_15
+    jp m, .is_within_palette_range
     ld a, 15
-.do_not_truncate_to_15
+.is_within_palette_range
+    ;cp 5
+    ;jp nc, .is_bigger_than_minimum
+    ;ld a, 5
+;.is_bigger_than_minimum:
     ld (hl), a               ; Add "flame" to our fire
     inc hl
 
@@ -129,7 +133,7 @@ add_flames:
 ;----------------------------------------------------------------------
 animate_fire:
     ld ix, fire+32           ; use IX as the pointer to each fire "pixel"
-    ld b, 23                 ; repeat for 23 lines
+    ld b, 22                 ; repeat for 23 lines
 
 .loop_fire_line:
     ld c, 32                 ; for each line, repeat for 32 characters
@@ -161,7 +165,7 @@ animate_fire:
 ;-- Render Fire
 ;----------------------------------------------------------------------
 render_fire:
-    halt                     ; VSYNC
+    halt                     ; VSYNC => enable if you want to limit framerate
 
     ld hl, fire              ; HL = source (fire)
     ld de, $4000+6144        ; DE = destination (attributes memory block)
