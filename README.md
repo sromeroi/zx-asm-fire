@@ -6,8 +6,9 @@ It's been almost 20 years since I wrote Z80 assembler for the last time (as of D
 
 You can download the TAP file [here](https://github.com/sromeroi/zx-asm-fire/raw/main/fire.tap) (just 936 bytes).
 
+You can see how the fire starts and runs for ~25 seconds with the sample GIF below:
+
 ![zx-asm-fire GIF](https://github.com/sromeroi/zx-asm-fire/blob/main/fire.gif?raw=true)
 
-(It looks much better animated :-).
-
+Of course, it runs perfectly con the original computer, but also on FPGAs, emulators, etc.
 
