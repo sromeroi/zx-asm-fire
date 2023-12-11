@@ -12,5 +12,5 @@ You can see how the fire starts and runs for ~25 seconds with the sample GIF bel
 
 Of course, it runs perfectly on the original computer, but also on FPGAs, emulators, etc.
 
-Thanks to Jare for sharing with us in 1993 his FIRE.EXE/ASM (packed along with Jester's ELYSIUM.MOD) for our PCs.
+Thanks to **Javier Arévalo** (**Jare**) for sharing with us in 1993 his FIRE.EXE/ASM (packed along with Jester's ELYSIUM.MOD) for our PCs.
 
