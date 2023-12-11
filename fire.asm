@@ -114,10 +114,6 @@ add_flames:
     jp m, .is_within_palette_range
     ld a, 15
 .is_within_palette_range
-    ;cp 5
-    ;jp nc, .is_bigger_than_minimum
-    ;ld a, 5
-;.is_bigger_than_minimum:
     ld (hl), a               ; Add "flame" to our fire
     inc hl
 
