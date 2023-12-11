@@ -30,6 +30,11 @@ BG_YELLOW       EQU (6<<3)
 BG_WHITE        EQU (7<<3)
 COLOR_BRIGHT    EQU 64
 
+; Fire never reaches top, so it's ok to reduce the "fire" array
+; and just render the top-left of the fire on a lower Y coordinate
+FIRE_HEIGHT     EQU 20
+FIRE_START      EQU (24-FIRE_HEIGHT)*32
+
 
 ;----------------------------------------------------------------------
 ;-- MAIN PROGRAM (ENTRY POINT)
@@ -44,7 +49,7 @@ mainloop:
     call add_flames          ; add flames to fire bottom
     call animate_fire        ; animate the fire (calculate next frame)
     call render_fire         ; render fire "array" to screen (attributes)
-    jr mainloop
+    jr mainloop              ; you'll never return to BASIC :)
 
 
 ;----------------------------------------------------------------------
@@ -84,11 +89,13 @@ fill_pattern:
     jr z, .draw_scanline
     ld a, 01010101b          ; alternate value for ODD lines (when H's LSB is 1)
 
+    ld c, 32                 ; each scanline is 32 "pixels" (attributes)
 .draw_scanline:
-    REPT 32
     ld (hl), a               ; store A in HL (paint first 8 pixels of scanline)
-    inc hl
-    ENDR
+    inc hl                   ; advance to next attribute
+
+    dec c
+    jr nz, .draw_scanline    ; Repeat for all 32 horizontal "pixels"
 
     djnz .loop_line          ; Repeat for 192 scanlines
     ret
@@ -99,7 +106,7 @@ fill_pattern:
 ;-- Fill the last line of the fire with random values.
 ;----------------------------------------------------------------------
 add_flames:
-    ld hl, fire+(32*23)
+    ld hl, fire+(32*(FIRE_HEIGHT-1))
     ld b, 32
 
 .loop:
@@ -128,16 +135,17 @@ add_flames:
 ;-- fire vanish slowly). We also ensure that "pixel" is <= 15 always.
 ;----------------------------------------------------------------------
 animate_fire:
-    ld ix, fire+32           ; use IX as the pointer to each fire "pixel"
-    ld b, 22                 ; repeat for 23 lines
+    ld ix, fire              ; use IX as the pointer to each fire "pixel"
+    ld hl, fire              ; use HL also for (IX+0) (7 cicles vs 19 cicles)
+    ld b, FIRE_HEIGHT        ; repeat for FIRE_HEIGHT lines -1
 
 .loop_fire_line:
     ld c, 32                 ; for each line, repeat for 32 characters
 
 .loop_fire_pixel:
-    ld a, (ix)
-    add a, (ix+1)
-    add a, (ix+32-1)
+    ld a, (hl)               ; Get IX+0 using HL
+    add a, (hl)              ; Pixel next to current one (right) use IX+1
+    add a, (ix+32-1)         ; For the pixels below use IX+N
     add a, (ix+32)
     add a, (ix+32+1)         ; sum all 4 values
     rrca                     ; divide by 4
@@ -148,8 +156,9 @@ animate_fire:
     sub 2                    ; if value >= 2, reduce fire
 
 .skip_substract:
-    ld (ix), a               ; Store calculated value
+    ld (hl), a               ; Store calculated value
     inc ix
+    inc hl
     dec c
     jr nz, .loop_fire_pixel
 
@@ -161,36 +170,41 @@ animate_fire:
 ;-- Render Fire
 ;----------------------------------------------------------------------
 render_fire:
-    ;halt                    ; VSYNC => enable if you want to limit framerate
+
+    ; Calc BC for fast 16 bits loop (See https://map.grauw.nl/articles/fast_loops.php)
+    ld de, 32*(FIRE_HEIGHT-1)
+    ld b, e
+    dec de
+    inc d                    ; Calculate DE value (destroys B, D and E)
+    ld c, d                  ; Now CB = 32*23 prepared for the 16 bits loop.
 
     ld hl, fire              ; HL = source (fire)
-    ld de, $4000+6144        ; DE = destination (attributes memory block)
+    ld de, $5800+FIRE_START  ; DE = destination (attributes memory block), jump 1 line
+
+    halt                     ; VSYNC => enable if you want to limit framerate
 
 .render_fire_line:
-
-    REPT 32*23               ; unroll loop for 768 times
     ld a, (hl)               ; Read "fire" value
     inc hl
 
-    ld xh,d
-    ld xl,e                  ; backup de => (ld ix, de)
+    push de                  ; backup de
 
-    ld de, palette           ; use HL+BC as palette[bc] to get color palette A
-    ld b, 0
-    ld c, a
+    ld de, palette           ; de = points to palette[0]
+    and 00001111b            ; ensure A is <= 15
+    or e                     ; A = A + E
+    ld e, a                  ; DE = points to palette[A]
 
-    ex de, hl
-    add hl, bc
-    ex de,hl                 ; => add de, bc
+    ld a, (de)               ; A = palette[A] = palette[fire[n]]
 
-    ld a, (de)               ; A = palette[ fire[n] ]
-
-    ld d, xh
-    ld e,xl                  ; restore de (ld de, ix)
+    pop de                   ; restore de
 
     ld (de), a               ; Write "pixel" (fire attribute) in the screen
     inc de
-    ENDR
+
+    ; Loop for (32*23) times, with BC previously calculated for this "trick"
+    djnz .render_fire_line
+    dec c
+    jp nz, .render_fire_line
 
     ret
 
@@ -221,8 +235,10 @@ random:
 ;-- Variables
 ;----------------------------------------------------------------------
 
-fire DS (32*24), 0           ; Our fire representation (32x24)
+fire DS (32*FIRE_HEIGHT), 0           ; Our fire representation (32x24)
 
+
+    ALIGN 16                 ; Align palette[0] to 16 to quick lookup
 palette:                     ; 16 colours black=>reds=>yellows=>white
     DB FG_BLACK + BG_BLACK
     DB FG_BLACK + BG_RED
