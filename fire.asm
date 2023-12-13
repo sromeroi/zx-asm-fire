@@ -32,7 +32,7 @@ COLOR_BRIGHT    EQU 64
 
 ; Fire never reaches top, so it's ok to reduce the "fire" array
 ; and just render the top-left of the fire on a lower Y coordinate
-FIRE_HEIGHT     EQU 20
+FIRE_HEIGHT     EQU 21
 FIRE_START      EQU (24-FIRE_HEIGHT)*32
 
 
@@ -42,8 +42,8 @@ FIRE_START      EQU (24-FIRE_HEIGHT)*32
 main:
     ; Prepare screen with black border+screen and a bg pattern
     call set_black_border
-    call fill_pattern
     call clear_attributes
+    call fill_pattern
 
 mainloop:
     call add_flames          ; add flames to fire bottom
@@ -89,13 +89,15 @@ fill_pattern:
     jr z, .draw_scanline
     ld a, 01010101b          ; alternate value for ODD lines (when H's LSB is 1)
 
-    ld c, 32                 ; each scanline is 32 "pixels" (attributes)
 .draw_scanline:
+    ld c, 32                 ; each scanline is 32 "pixels" (attributes)
+
+.draw_block
     ld (hl), a               ; store A in HL (paint first 8 pixels of scanline)
     inc hl                   ; advance to next attribute
 
     dec c
-    jr nz, .draw_scanline    ; Repeat for all 32 horizontal "pixels"
+    jr nz, .draw_block       ; Repeat for all 32 horizontal "pixels"
 
     djnz .loop_line          ; Repeat for 192 scanlines
     ret
@@ -111,10 +113,9 @@ add_flames:
 
 .loop:
     call random              ; Get a random number 0-256
-    rrca
-    rrca
-    rrca
-    rrca                     ; Divide by 16 (now is 0-16)
+    REPT 4
+    rrca                     ; rotate right 4 times
+    ENDR
     and 00001111b            ; Ensure bits 7-4 are 0
     add 2                    ; Increase the resulting value
     cp 16
