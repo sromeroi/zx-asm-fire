@@ -32,7 +32,7 @@ COLOR_BRIGHT    EQU 64
 
 ; Fire never reaches top, so it's ok to reduce the "fire" array
 ; and just render the top-left of the fire on a lower Y coordinate
-FIRE_HEIGHT     EQU 21
+FIRE_HEIGHT     EQU 20
 FIRE_START      EQU (24-FIRE_HEIGHT)*32
 
 
