@@ -10,8 +10,10 @@
 ;----------------------------------------------------------------------
 ;-- Constants
 ;----------------------------------------------------------------------
-BORDCR          EQU 0x5C48
-SEED            EQU 23670
+BORDCR          EQU $5C48
+SEED            EQU $5C76
+VRAM_PIXELS     EQU $4000
+VRAM_ATTRIB     EQU $5800
 
 FG_BLACK        EQU 0
 FG_BLUE         EQU 1
@@ -31,8 +33,8 @@ BG_YELLOW       EQU (FG_YELLOW << 3)
 BG_WHITE        EQU (FG_WHITE << 3)
 COLOR_BRIGHT    EQU 64
 
-; Fire never reaches top, so it's ok to reduce the "fire" array
-; and just render the top-left of the fire on a lower Y coordinate
+; Fire never reaches top, so it's ok to reduce the "fire" array and just
+; render the top-left corner of the fire on a lower Y screen coordinate
 FIRE_HEIGHT     EQU 20
 FIRE_START      EQU (24-FIRE_HEIGHT)*32
 
@@ -41,10 +43,10 @@ FIRE_START      EQU (24-FIRE_HEIGHT)*32
 ;-- MAIN PROGRAM (ENTRY POINT)
 ;----------------------------------------------------------------------
 main:
-    ; Prepare screen with black border+screen and a bg pattern
-    call set_black_border
-    call clear_attributes
-    call fill_pattern
+    call set_black_border    ; Prepare screen with black border,
+    call clear_attributes    ; black INK/PAPER, and a bg pattern by
+    call fill_pattern        ; alternating 01010101b/10101010b each line
+                             ; to allow extra colors with "dithering"
 
 mainloop:
     call add_flames          ; add flames to fire bottom
@@ -67,8 +69,8 @@ set_black_border:
 ;-- Set screen attributes to 0 (BLACK)
 ;----------------------------------------------------------------------
 clear_attributes:
-    ld hl, $4000+(192*32)
-    ld de, $4000+(192*32)+1
+    ld hl, VRAM_ATTRIB
+    ld de, VRAM_ATTRIB+1
     ld bc, (32*24)-1
     xor a
     ld (hl), a
@@ -81,7 +83,7 @@ clear_attributes:
 ;-- a 01010101b pattern for odd lines.
 ;----------------------------------------------------------------------
 fill_pattern:
-    ld hl, $4000
+    ld hl, VRAM_PIXELS
     ld b, 192                ; scanlines to draw
 
 .loop_line:
@@ -183,9 +185,12 @@ render_fire:
     ld c, d                  ; Now CB = 32*23 prepared for the 16 bits loop.
 
     ld hl, fire              ; HL = source (fire)
-    ld de, $5800+FIRE_START  ; DE = destination (attributes memory block), jump 1 line
+
+    ; DE = destination (attributes memory block), + jump 1 line
+    ld de, VRAM_ATTRIB+FIRE_START
 
     halt                     ; VSYNC => enable if you want to limit framerate
+                             ; Not really required on Z80@3.5Mhz
 
 .render_fire_line:
     ld a, (hl)               ; Read "fire" value
