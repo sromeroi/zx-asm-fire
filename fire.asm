@@ -1,7 +1,8 @@
 ;----------------------------------------------------------------------
-;-- Z80 ASM test 2023 - fire.asm
+;-- Z80 ASM test 2023 - fire.asm for the Sinclair ZX Spectrum.
 ;-- A tribute to Jare's fire demo published on 1993 for PC/MSDOS.
 ;-- Dec-2023 - Santiago Romero <sromero@gmail.com>
+;-- Last updated version at: https://github.com/sromeroi/zx-asm-fire
 ;----------------------------------------------------------------------
 
     ORG $8000
@@ -113,13 +114,15 @@ add_flames:
 
 .loop:
     call random              ; Get a random number 0-256
+
     REPT 4
-    rrca                     ; rotate right 4 times
+    rrca                     ; rotate right 4 times (divide by 16)
     ENDR
-    and 00001111b            ; Ensure bits 7-4 are 0
-    add 2                    ; Increase the resulting value
+
+    and 00001111b            ; Clears bits 7-4 (old LSB's)
+    add 2                    ; Increase a bit the resulting value
     cp 16
-    jp m, .is_within_palette_range
+    jr c, .is_within_palette_range
     ld a, 15
 .is_within_palette_range
     ld (hl), a               ; Add "flame" to our fire
@@ -205,7 +208,7 @@ render_fire:
     ; Loop for (32*23) times, with BC previously calculated for this "trick"
     djnz .render_fire_line
     dec c
-    jp nz, .render_fire_line
+    jr nz, .render_fire_line
 
     ret
 
