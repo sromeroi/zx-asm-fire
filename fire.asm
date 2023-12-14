@@ -10,10 +10,11 @@
 ;----------------------------------------------------------------------
 ;-- Constants
 ;----------------------------------------------------------------------
-BORDCR          EQU $5C48
-SEED            EQU $5C76
-VRAM_PIXELS     EQU $4000
-VRAM_ATTRIB     EQU $5800
+
+BORDCR          EQU $5C48    ; Spectrum's system variable address: BORDER colour
+SEED            EQU $5C76    ; Spectrum's system variable address: RND seed
+VRAM_PIXELS     EQU $4000    ; VideoRam for pixels/bitmap starts here
+VRAM_ATTRIB     EQU $5800    ; VideoRam for colours/attributes starts here
 
 FG_BLACK        EQU 0
 FG_BLUE         EQU 1
