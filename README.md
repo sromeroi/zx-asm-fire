@@ -2,7 +2,7 @@
 
 Fire demo written in Z80 Assembly for the Sinclair ZX Spectrum.
 
-It's been almost 20 years since I wrote Z80 assembler for the last time (as of December 2023), so I tried to do a quick exercise just to see if I still remembered all the opcodes, hacks & tricks.
+It's been more than 10 years since I wrote Z80 assembler for the last time (as of December 2023), so I tried to do a quick exercise just to see if I still remembered all the opcodes, hacks & tricks.
 
 You can download the TAP file [here](https://github.com/sromeroi/zx-asm-fire/raw/main/fire.tap) (not even 1KB, generated from less than 300 lines of Z80 assembly code).
 
