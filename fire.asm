@@ -124,7 +124,7 @@ add_flames:
     ENDR
 
     and 00001111b            ; Clears bits 7-4 (old LSB's)
-    add 2                    ; Increase a bit the resulting value
+    add a, 2                 ; Increase a bit the resulting value
     cp 16
     jr c, .is_within_palette_range
     ld a, 15
