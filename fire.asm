@@ -5,7 +5,8 @@
 ;-- Last updated version at: https://github.com/sromeroi/zx-asm-fire
 ;----------------------------------------------------------------------
 
-    ORG $8000
+    ORG 35000                ; Set it to 27000 for 16K models
+
 
 ;----------------------------------------------------------------------
 ;-- Constants
@@ -271,5 +272,5 @@ palette:                     ; 16 colours black=>reds=>yellows=>white
 ;----------------------------------------------------------------------
 program_length = $-main
 
-    include     TapLib.asm
+    include TapLib.asm
     MakeTape ZXSPECTRUM48, "fire.tap", "Fire", main, program_length, main
