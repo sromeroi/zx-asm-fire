@@ -1,5 +1,5 @@
 all:
-	sjasmplus --syntax=f fire.asm && fuse fire.tap
+	sjasmplus --syntax=f fire.asm
 
 clean:
 	rm fire.tap

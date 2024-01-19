@@ -12,7 +12,7 @@
 ;-- Constants
 ;----------------------------------------------------------------------
 
-BORDCR          EQU $5C48    ; Spectrum's system variable address: BORDER colour
+BORDCR          EQU $5C48    ; Spectrum's system variable address: BORDER color
 SEED            EQU $5C76    ; Spectrum's system variable address: RND seed
 VRAM_PIXELS     EQU $4000    ; VideoRam for pixels/bitmap starts here
 VRAM_ATTRIB     EQU $5800    ; VideoRam for colours/attributes starts here
@@ -45,22 +45,22 @@ FIRE_START      EQU (24-FIRE_HEIGHT)*32
 ;-- MAIN PROGRAM (ENTRY POINT)
 ;----------------------------------------------------------------------
 main:
-    call set_black_border    ; Prepare screen with black border,
-    call clear_attributes    ; black INK/PAPER, and a bg pattern by
-    call fill_pattern        ; alternating 01010101b/10101010b each line
+    call SetBlackBorder      ; Prepare screen with black border,
+    call ClearAttributes     ; black INK/PAPER, and a bg pattern by
+    call FillPattern         ; alternating 01010101b/10101010b each line
                              ; to allow extra colors with "dithering"
 
 mainloop:
-    call add_flames          ; add flames to fire bottom
-    call animate_fire        ; animate the fire (calculate next frame)
-    call render_fire         ; render fire "array" to screen (attributes)
+    call AddFlames           ; add flames to fire bottom
+    call AnimateFire         ; animate the fire (calculate next frame)
+    call RenderFire          ; render fire "array" to screen (attributes)
     jr mainloop              ; you'll never return to BASIC :)
 
 
 ;----------------------------------------------------------------------
 ;-- Set border to black colour
 ;----------------------------------------------------------------------
-set_black_border:
+SetBlackBorder:
     xor a
     ld (BORDCR), a
     out ($fe), a              ; set border 0 (black)
@@ -70,7 +70,7 @@ set_black_border:
 ;----------------------------------------------------------------------
 ;-- Set screen attributes to 0 (BLACK)
 ;----------------------------------------------------------------------
-clear_attributes:
+ClearAttributes:
     ld hl, VRAM_ATTRIB
     ld de, VRAM_ATTRIB+1
     ld bc, (32*24)-1
@@ -84,15 +84,15 @@ clear_attributes:
 ;-- Fill the screen with a 10101010b pattern for even lines and
 ;-- a 01010101b pattern for odd lines.
 ;----------------------------------------------------------------------
-fill_pattern:
+FillPattern:
     ld hl, VRAM_PIXELS
     ld b, 192                ; scanlines to draw
 
 .loop_line:
-    ld a, 10101010b          ; default value for EVEN lines
+    ld a, %10101010          ; default value for EVEN lines
     bit 0, h                 ; bit 0 of H (Y's LSB) selects pattern value
     jr z, .draw_scanline
-    ld a, 01010101b          ; alternate value for ODD lines (when H's LSB is 1)
+    ld a, %01010101          ; alternate value for ODD lines (when H's LSB is 1)
 
 .draw_scanline:
     ld c, 32                 ; each scanline is 32 "pixels" (attributes)
@@ -112,18 +112,18 @@ fill_pattern:
 ;-- Add some "hot spots" at the bottom of the fire.
 ;-- Fill the last line of the fire with random values.
 ;----------------------------------------------------------------------
-add_flames:
+AddFlames:
     ld hl, fire+(32*(FIRE_HEIGHT-1))
     ld b, 32
 
 .loop:
-    call random              ; Get a random number 0-256
+    call Random              ; Get a random number 0-256
 
     REPT 4
     rrca                     ; rotate right 4 times (divide by 16)
     ENDR
 
-    and 00001111b            ; Clears bits 7-4 (old LSB's)
+    and %00001111            ; Clears bits 7-4 (old LSB's)
     add a, 2                 ; Increase a bit the resulting value
     cp 16
     jr c, .is_within_palette_range
@@ -142,7 +142,7 @@ add_flames:
 ;-- calculating the average, and substracting some value (to make the
 ;-- fire vanish slowly). We also ensure that "pixel" is <= 15 always.
 ;----------------------------------------------------------------------
-animate_fire:
+AnimateFire:
     ld ix, fire              ; use IX as the pointer to each fire "pixel"
     ld hl, fire              ; use HL also for (IX+0) (7 cicles vs 19 cicles)
     ld b, FIRE_HEIGHT        ; repeat for FIRE_HEIGHT lines -1
@@ -177,7 +177,7 @@ animate_fire:
 ;----------------------------------------------------------------------
 ;-- Render Fire
 ;----------------------------------------------------------------------
-render_fire:
+RenderFire:
 
     ; Calc BC for fast 16 bits loop (See https://map.grauw.nl/articles/fast_loops.php)
     ld de, 32*(FIRE_HEIGHT-1)
@@ -201,7 +201,7 @@ render_fire:
     push de                  ; backup de
 
     ld de, palette           ; de = points to palette[0]
-    and 00001111b            ; ensure A is <= 15
+    and %00001111            ; ensure A is <= 15
     or e                     ; A = A + E
     ld e, a                  ; DE = points to palette[A]
 
@@ -226,7 +226,7 @@ render_fire:
 ;-- all registers are preserved except: af
 ;-- Pseudorandom number generator featured in Ion by Joe Wingbermuehle
 ;----------------------------------------------------------------------
-random:
+Random:
     push hl
     push de
     ld hl, (SEED)
@@ -246,11 +246,13 @@ random:
 ;-- Variables
 ;----------------------------------------------------------------------
 
-fire DS (32*FIRE_HEIGHT), 0           ; Our fire representation (32x24)
+; Our fire representation (32x24)
+fire DS (32*FIRE_HEIGHT), 0
 
-
-    ALIGN 16                 ; Align palette[0] to 16 to quick lookup
-palette:                     ; 16 colours black=>reds=>yellows=>white
+    ALIGN 16
+; 16 colours black=>reds=>yellows=>white
+; Align palette[0] to 16 to quick lookup
+palette:
     DB FG_BLACK + BG_BLACK
     DB FG_BLACK + BG_RED
     DB FG_BLACK + BG_RED
