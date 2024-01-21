@@ -45,39 +45,39 @@ FIRE_START      EQU (24-FIRE_HEIGHT)*32
 ;-- MAIN PROGRAM (ENTRY POINT)
 ;----------------------------------------------------------------------
 main:
-    call SetBlackBorder      ; Prepare screen with black border,
-    call ClearAttributes     ; black INK/PAPER, and a bg pattern by
-    call FillPattern         ; alternating 01010101b/10101010b each line
-                             ; to allow extra colors with "dithering"
+        call SetBlackBorder      ; Prepare screen with black border,
+        call ClearAttributes     ; black INK/PAPER, and a bg pattern by
+        call FillPattern         ; alternating 01010101b/10101010b each line
+                                 ; to allow extra colors with "dithering"
 
 mainloop:
-    call AddFlames           ; add flames to fire bottom
-    call AnimateFire         ; animate the fire (calculate next frame)
-    call RenderFire          ; render fire "array" to screen (attributes)
-    jr mainloop              ; you'll never return to BASIC :)
+        call AddFlames           ; add flames to fire bottom
+        call AnimateFire         ; animate the fire (calculate next frame)
+        call RenderFire          ; render fire "array" to screen (attributes)
+        jr mainloop              ; you'll never return to BASIC :)
 
 
 ;----------------------------------------------------------------------
 ;-- Set border to black colour
 ;----------------------------------------------------------------------
 SetBlackBorder:
-    xor a
-    ld (BORDCR), a
-    out ($fe), a              ; set border 0 (black)
-    ret
+        xor a
+        ld (BORDCR), a
+        out ($fe), a              ; set border 0 (black)
+        ret
 
 
 ;----------------------------------------------------------------------
 ;-- Set screen attributes to 0 (BLACK)
 ;----------------------------------------------------------------------
 ClearAttributes:
-    ld hl, VRAM_ATTRIB
-    ld de, VRAM_ATTRIB+1
-    ld bc, (32*24)-1
-    xor a
-    ld (hl), a
-    ldir                     ; Clear entire attribute area (768 bytes)
-    ret
+        ld hl, VRAM_ATTRIB
+        ld de, VRAM_ATTRIB+1
+        ld bc, (32*24)-1
+        xor a
+        ld (hl), a
+        ldir                     ; Clear entire attribute area (768 bytes)
+        ret
 
 
 ;----------------------------------------------------------------------
@@ -85,27 +85,27 @@ ClearAttributes:
 ;-- a 01010101b pattern for odd lines.
 ;----------------------------------------------------------------------
 FillPattern:
-    ld hl, VRAM_PIXELS
-    ld b, 192                ; scanlines to draw
+        ld hl, VRAM_PIXELS
+        ld b, 192                ; scanlines to draw
 
 .loop_line:
-    ld a, %10101010          ; default value for EVEN lines
-    bit 0, h                 ; bit 0 of H (Y's LSB) selects pattern value
-    jr z, .draw_scanline
-    ld a, %01010101          ; alternate value for ODD lines (when H's LSB is 1)
+        ld a, %10101010          ; default value for EVEN lines
+        bit 0, h                 ; bit 0 of H (Y's LSB) selects pattern value
+        jr z, .draw_scanline
+        ld a, %01010101          ; alternate value for ODD lines (when H's LSB is 1)
 
 .draw_scanline:
-    ld c, 32                 ; each scanline is 32 "pixels" (attributes)
+        ld c, 32                 ; each scanline is 32 "pixels" (attributes)
 
 .draw_block
-    ld (hl), a               ; store A in HL (paint first 8 pixels of scanline)
-    inc hl                   ; advance to next attribute
+        ld (hl), a               ; store A in HL (paint first 8 pixels of scanline)
+        inc hl                   ; advance to next attribute
 
-    dec c
-    jr nz, .draw_block       ; Repeat for all 32 horizontal "pixels"
+        dec c
+        jr nz, .draw_block       ; Repeat for all 32 horizontal "pixels"
 
-    djnz .loop_line          ; Repeat for 192 scanlines
-    ret
+        djnz .loop_line          ; Repeat for 192 scanlines
+        ret
 
 
 ;----------------------------------------------------------------------
@@ -113,27 +113,27 @@ FillPattern:
 ;-- Fill the last line of the fire with random values.
 ;----------------------------------------------------------------------
 AddFlames:
-    ld hl, fire+(32*(FIRE_HEIGHT-1))
-    ld b, 32
+        ld hl, fire+(32*(FIRE_HEIGHT-1))
+        ld b, 32
 
 .loop:
-    call Random              ; Get a random number 0-256
+        call Random              ; Get a random number 0-256
 
-    REPT 4
-    rrca                     ; rotate right 4 times (divide by 16)
-    ENDR
+        REPT 4
+        rrca                     ; rotate right 4 times (divide by 16)
+        ENDR
 
-    and %00001111            ; Clears bits 7-4 (old LSB's)
-    add a, 2                 ; Increase a bit the resulting value
-    cp 16
-    jr c, .is_within_palette_range
-    ld a, 15
+        and %00001111            ; Clears bits 7-4 (old LSB's)
+        add a, 2                 ; Increase a bit the resulting value
+        cp 16
+        jr c, .is_within_palette_range
+        ld a, 15
 .is_within_palette_range
-    ld (hl), a               ; Add "flame" to our fire
-    inc hl
+        ld (hl), a               ; Add "flame" to our fire
+        inc hl
 
-    djnz .loop
-    ret
+        djnz .loop
+        ret
 
 
 ;----------------------------------------------------------------------
@@ -143,35 +143,35 @@ AddFlames:
 ;-- fire vanish slowly). We also ensure that "pixel" is <= 15 always.
 ;----------------------------------------------------------------------
 AnimateFire:
-    ld ix, fire              ; use IX as the pointer to each fire "pixel"
-    ld hl, fire              ; use HL also for (IX+0) (7 cicles vs 19 cicles)
-    ld b, FIRE_HEIGHT        ; repeat for FIRE_HEIGHT lines -1
+        ld ix, fire              ; use IX as the pointer to each fire "pixel"
+        ld hl, fire              ; use HL also for (IX+0) (7 cicles vs 19 cicles)
+        ld b, FIRE_HEIGHT        ; repeat for FIRE_HEIGHT lines -1
 
 .loop_fire_line:
-    ld c, 32                 ; for each line, repeat for 32 characters
+        ld c, 32                 ; for each line, repeat for 32 characters
 
 .loop_fire_pixel:
-    ld a, (hl)               ; Get IX+0 using HL
-    add a, (hl)              ; Pixel next to current one (right) use IX+1
-    add a, (ix+32-1)         ; For the pixels below use IX+N
-    add a, (ix+32)
-    add a, (ix+32+1)         ; sum all 4 values
-    rrca                     ; divide by 4
-    rrca
-    and 00001111b
-    cp 2
-    jr c, .skip_substract
-    sub 2                    ; if value >= 2, reduce fire
+        ld a, (hl)               ; Get IX+0 using HL
+        add a, (hl)              ; Pixel next to current one (right) use IX+1
+        add a, (ix+32-1)         ; For the pixels below use IX+N
+        add a, (ix+32)
+        add a, (ix+32+1)         ; sum all 4 values
+        rrca                     ; divide by 4
+        rrca
+        and %00001111
+        cp 2
+        jr c, .skip_substract
+        sub 2                    ; if value >= 2, reduce fire
 
 .skip_substract:
-    ld (hl), a               ; Store calculated value
-    inc ix
-    inc hl
-    dec c
-    jr nz, .loop_fire_pixel
+        ld (hl), a               ; Store calculated value
+        inc ix
+        inc hl
+        dec c
+        jr nz, .loop_fire_pixel
 
-    djnz .loop_fire_line     ; Repeat for the 23 lines
-    ret
+        djnz .loop_fire_line     ; Repeat for the 23 lines
+        ret
 
 
 ;----------------------------------------------------------------------
@@ -179,45 +179,46 @@ AnimateFire:
 ;----------------------------------------------------------------------
 RenderFire:
 
-    ; Calc BC for fast 16 bits loop (See https://map.grauw.nl/articles/fast_loops.php)
-    ld de, 32*(FIRE_HEIGHT-1)
-    ld b, e
-    dec de
-    inc d                    ; Calculate DE value (destroys B, D and E)
-    ld c, d                  ; Now CB = 32*23 prepared for the 16 bits loop.
+        ; Calc BC for fast 16 bits loop
+        ; (See https://map.grauw.nl/articles/fast_loops.php)
+        ld de, 32*(FIRE_HEIGHT-1)
+        ld b, e
+        dec de
+        inc d                    ; Calculate DE value (destroys B, D and E)
+        ld c, d                  ; Now CB = 32*23 prepared for the 16 bits loop.
 
-    ld hl, fire              ; HL = source (fire)
+        ld hl, fire              ; HL = source (fire)
 
-    ; DE = destination (attributes memory block), + jump 1 line
-    ld de, VRAM_ATTRIB+FIRE_START
+        ; DE = destination (attributes memory block), + jump 1 line
+        ld de, VRAM_ATTRIB+FIRE_START
 
-    halt                     ; VSYNC => enable if you want to limit framerate
-                             ; Not really required on Z80@3.5Mhz
+        halt                     ; VSYNC => enable if you want to limit framerate
+                                 ; Not really required on Z80@3.5Mhz
 
 .render_fire_line:
-    ld a, (hl)               ; Read "fire" value
-    inc hl
+        ld a, (hl)               ; Read "fire" value
+        inc hl
 
-    push de                  ; backup de
+        push de                  ; backup de
 
-    ld de, palette           ; de = points to palette[0]
-    and %00001111            ; ensure A is <= 15
-    or e                     ; A = A + E
-    ld e, a                  ; DE = points to palette[A]
+        ld de, palette           ; de = points to palette[0]
+        and %00001111            ; ensure A is <= 15
+        or e                     ; A = A + E
+        ld e, a                  ; DE = points to palette[A]
 
-    ld a, (de)               ; A = palette[A] = palette[fire[n]]
+        ld a, (de)               ; A = palette[A] = palette[fire[n]]
 
-    pop de                   ; restore de
+        pop de                   ; restore de
 
-    ld (de), a               ; Write "pixel" (fire attribute) in the screen
-    inc de
+        ld (de), a               ; Write "pixel" (fire attribute) in the screen
+        inc de
 
-    ; Loop for (32*23) times, with BC previously calculated for this "trick"
-    djnz .render_fire_line
-    dec c
-    jr nz, .render_fire_line
+        ; Loop for (32*23) times, with BC previously calculated for this "trick"
+        djnz .render_fire_line
+        dec c
+        jr nz, .render_fire_line
 
-    ret
+        ret
 
 
 ;----------------------------------------------------------------------
@@ -227,19 +228,19 @@ RenderFire:
 ;-- Pseudorandom number generator featured in Ion by Joe Wingbermuehle
 ;----------------------------------------------------------------------
 Random:
-    push hl
-    push de
-    ld hl, (SEED)
-    ld a, r
-    ld d, a
-    ld e, (hl)
-    add hl, de
-    add a, l
-    xor h
-    ld (SEED), hl
-    pop de
-    pop hl
-    ret
+        push hl
+        push de
+        ld hl, (SEED)
+        ld a, r
+        ld d, a
+        ld e, (hl)
+        add hl, de
+        add a, l
+        xor h
+        ld (SEED), hl
+        pop de
+        pop hl
+        ret
 
 
 ;----------------------------------------------------------------------
@@ -249,26 +250,26 @@ Random:
 ; Our fire representation (32x24)
 fire DS (32*FIRE_HEIGHT), 0
 
-    ALIGN 16
+        ALIGN 16
 ; 16 colours black=>reds=>yellows=>white
 ; Align palette[0] to 16 to quick lookup
 palette:
-    DB FG_BLACK + BG_BLACK
-    DB FG_BLACK + BG_RED
-    DB FG_BLACK + BG_RED
-    DB FG_RED + BG_BLACK + COLOR_BRIGHT
-    DB FG_RED + BG_BLACK + COLOR_BRIGHT
-    DB FG_RED + BG_RED
-    DB FG_RED + BG_RED
-    DB FG_RED + BG_RED + COLOR_BRIGHT
-    DB FG_RED + BG_RED + COLOR_BRIGHT
-    DB FG_RED + BG_YELLOW
-    DB FG_RED + BG_YELLOW + COLOR_BRIGHT
-    DB FG_YELLOW + BG_YELLOW
-    DB FG_YELLOW + BG_WHITE
-    DB FG_YELLOW + BG_YELLOW + COLOR_BRIGHT
-    DB FG_YELLOW + BG_WHITE + COLOR_BRIGHT
-    DB FG_WHITE + BG_WHITE + COLOR_BRIGHT
+        DB FG_BLACK + BG_BLACK
+        DB FG_BLACK + BG_RED
+        DB FG_BLACK + BG_RED
+        DB FG_RED + BG_BLACK + COLOR_BRIGHT
+        DB FG_RED + BG_BLACK + COLOR_BRIGHT
+        DB FG_RED + BG_RED
+        DB FG_RED + BG_RED
+        DB FG_RED + BG_RED + COLOR_BRIGHT
+        DB FG_RED + BG_RED + COLOR_BRIGHT
+        DB FG_RED + BG_YELLOW
+        DB FG_RED + BG_YELLOW + COLOR_BRIGHT
+        DB FG_YELLOW + BG_YELLOW
+        DB FG_YELLOW + BG_WHITE
+        DB FG_YELLOW + BG_YELLOW + COLOR_BRIGHT
+        DB FG_YELLOW + BG_WHITE + COLOR_BRIGHT
+        DB FG_WHITE + BG_WHITE + COLOR_BRIGHT
 
 
 ;----------------------------------------------------------------------
